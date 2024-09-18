@@ -1,101 +1,108 @@
-import Image from "next/image";
+"use client";
+import { useState } from 'react';
+import KanbanColumn from './Components/KanbanColumn';
+import SprintForm from './Components/SprintForm';
+import { Task, Sprint } from './types';
+// Componente principal HomePage
+const HomePage = () => {
 
-export default function Home() {
+  // Definimos los estados locales para el título y descripción de la tarea, nombre del sprint, y la lista de sprints
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDescription, setTaskDescription] = useState('');
+  const [sprintName, setSprintName] = useState('');
+  const [sprints, setSprints] = useState<Sprint[]>([]);
+  
+  // Función para agregar un nuevo sprint
+  const addSprint = () => {
+    if (sprintName) { // Solo agrega si hay un nombre para el sprint
+      setSprints([...sprints, { name: sprintName, tasks: [] }]);// Añadimos un nuevo sprint con un array vacío de tareas
+      setSprintName('');// Limpiamos el campo del sprint
+    }
+  };
+
+  // Función para agregar una nueva tarea a un sprint específico
+  const addTask = (sprintIndex: number) => {
+    if (taskTitle) {// Solo agrega si hay un título para la tarea
+      const newSprints = [...sprints]; // Clonamos el array de sprints
+      newSprints[sprintIndex].tasks.push({
+        id: Date.now(),// Generamos un id único basado en la fecha actual
+        title: taskTitle,// Usamos el título de la tarea del estado
+        description: taskDescription,// Usamos la descripción de la tarea del estado
+        status: 'Por hacer'// Estado inicial de la tarea es 'Por hacer'
+      });
+      setSprints(newSprints);
+      setTaskTitle('');
+      setTaskDescription('');
+    }
+  };
+
+
+  // Función para cambiar el estado de una tarea
+  const changeTaskStatus = (sprintIndex: number, taskIndex: number, status: 'Por hacer' | 'En proceso' | 'Hecho') => {
+    const newSprints = [...sprints]; // Clonamos el array de sprints
+    const task = newSprints[sprintIndex].tasks[taskIndex];// Obtenemos la tarea específica
+    if (task) {// Si la tarea existe, actualizamos su estado
+      task.status = status;
+      setSprints(newSprints); // Actualizamos el estado de los sprints
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="min-h-screen bg-gray-100 p-5"> {/* Estilos del contenedor principal */}
+      <h1 className="text-3xl font-bold text-center mb-10">Gestor de Proyectos Ágiles</h1> {/* Título principal */}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      <SprintForm sprintName={sprintName} setSprintName={setSprintName} addSprint={addSprint} />{/* Formulario para agregar sprints */}
+
+      {sprints.map((sprint, sprintIndex) => (
+        <div key={sprintIndex} className="mb-10"> {/* Contenedor de cada sprint */}
+          <h2 className="text-2xl font-semibold text-center mb-5">{sprint.name}</h2>{/* Nombre del sprint */}
+
+          <div className="w-full max-w-md mx-auto mb-5">{/* Formulario para agregar tareas */}
+            <input
+              type="text"
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)} // Actualizamos el título de la tarea
+              className="w-full p-2 border border-gray-300 rounded-md mb-4"
+              placeholder="Nombre de la tarea..."
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <textarea
+              value={taskDescription}
+              onChange={(e) => setTaskDescription(e.target.value)} // Actualizamos la descripción de la tarea
+              className="w-full p-2 border border-gray-300 rounded-md mb-4"
+              placeholder="Descripción de la tarea..."
+            />
+            <button
+              onClick={() => addTask(sprintIndex)}// Llamamos a la función para agregar la tarea
+              className="w-full bg-blue-500 text-white p-2 rounded-md"
+            >
+              Agregar Tarea
+            </button>
+          </div>
+
+          <div className="flex flex-col space-y-4 md:flex-row md:space-x-4">  {/* Contenedor de las columnas Kanban */}
+            <KanbanColumn
+              title="Por hacer"
+              tasks={sprint.tasks.filter(task => task.status === 'Por hacer')}// Filtramos las tareas que están en 'Por hacer'
+              onMove={(taskIndex, newStatus) => changeTaskStatus(sprintIndex, taskIndex, newStatus)}// Función para mover tareas entre columnas
+            />
+
+            <KanbanColumn
+              title="En proceso"
+              tasks={sprint.tasks.filter(task => task.status === 'En proceso')}// Filtramos las tareas que están 'En proceso'
+              onMove={(taskIndex, newStatus) => changeTaskStatus(sprintIndex, taskIndex, newStatus)}// Función para mover tareas
+            />
+
+            <KanbanColumn
+              title="Hecho"
+              tasks={sprint.tasks.filter(task => task.status === 'Hecho')} // Filtramos las tareas que están 'Hecho'
+              onMove={(taskIndex, newStatus) => changeTaskStatus(sprintIndex, taskIndex, newStatus)}// Función para mover tareas
+            />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ))}
     </div>
   );
-}
+};
+
+export default HomePage;
+
