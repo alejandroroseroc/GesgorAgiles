@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import KanbanColumn from './Components/KanbanColumn';
 import SprintForm from './Components/SprintForm';
-import { Task, Sprint } from './types';
+import { Sprint } from './types';
 // Componente principal HomePage
 const HomePage = () => {
 
